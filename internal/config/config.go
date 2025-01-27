@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	DBPath string `yaml:"db_path"`
+	Secret string `yaml:"secret"`
 }
 
 func Init() (*Config, error) {
