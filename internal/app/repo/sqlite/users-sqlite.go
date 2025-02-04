@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/gwkeo/scaling-couscous/internal/app/repo"
+	errors2 "github.com/gwkeo/scaling-couscous/internal/app/errors"
 	"github.com/gwkeo/scaling-couscous/internal/app/repo/models"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -44,7 +44,7 @@ func NewUsersRepo(ctx context.Context, path string) (*UsersRepoSqlite, error) {
 func (r *UsersRepoSqlite) CreateUser(ctx context.Context, user *models.User) (int64, error) {
 	stmt, err := r.db.PrepareContext(ctx, "INSERT INTO users (email, password) VALUES (?, ?);")
 	if err != nil {
-		return 0, repo.ErrFailedToPrepareStmt
+		return 0, errors2.ErrFailedToPrepareStmt
 	}
 
 	defer func() {
@@ -53,12 +53,12 @@ func (r *UsersRepoSqlite) CreateUser(ctx context.Context, user *models.User) (in
 
 	res, err := stmt.ExecContext(ctx, user.Email, user.Password)
 	if err != nil {
-		return 0, repo.ErrFailedToInsertUser
+		return 0, errors2.ErrFailedToInsertUser
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, repo.ErrFailedToGetLastId
+		return 0, errors2.ErrFailedToGetLastId
 	}
 
 	return id, nil
@@ -69,7 +69,7 @@ func (r *UsersRepoSqlite) User(ctx context.Context, id int64) (*models.User, err
 
 	stmt, err := r.db.PrepareContext(ctx, "SELECT * FROM users WHERE id = ?;")
 	if err != nil {
-		return nil, repo.ErrFailedToPrepareStmt
+		return nil, errors2.ErrFailedToPrepareStmt
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -78,9 +78,9 @@ func (r *UsersRepoSqlite) User(ctx context.Context, id int64) (*models.User, err
 	err = stmt.QueryRowContext(ctx, id).Scan(&user.ID, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return user, repo.ErrUserNotFound
+			return user, errors2.ErrUserNotFound
 		}
-		return nil, repo.ErrFailedToGetUser
+		return nil, errors2.ErrFailedToGetUser
 	}
 
 	return user, nil
@@ -91,7 +91,7 @@ func (r *UsersRepoSqlite) UserByEmail(ctx context.Context, email string) (*model
 
 	stmt, err := r.db.PrepareContext(ctx, "SELECT * FROM users WHERE email = ?;")
 	if err != nil {
-		return nil, repo.ErrFailedToPrepareStmt
+		return nil, errors2.ErrFailedToPrepareStmt
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -100,9 +100,9 @@ func (r *UsersRepoSqlite) UserByEmail(ctx context.Context, email string) (*model
 	err = stmt.QueryRowContext(ctx, email).Scan(&user.ID, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, repo.ErrUserNotFound
+			return nil, errors2.ErrUserNotFound
 		}
-		return nil, repo.ErrFailedToGetUserByEmail
+		return nil, errors2.ErrFailedToGetUserByEmail
 	}
 
 	return &user, nil
@@ -111,7 +111,7 @@ func (r *UsersRepoSqlite) UserByEmail(ctx context.Context, email string) (*model
 func (r *UsersRepoSqlite) UpdateUser(ctx context.Context, user *models.User) error {
 	stmt, err := r.db.PrepareContext(ctx, "UPDATE users SET email = ?, password = ? WHERE id = ?;")
 	if err != nil {
-		return repo.ErrFailedToPrepareStmt
+		return errors2.ErrFailedToPrepareStmt
 	}
 	defer func() {
 		err = stmt.Close()
@@ -122,7 +122,7 @@ func (r *UsersRepoSqlite) UpdateUser(ctx context.Context, user *models.User) err
 
 	_, err = stmt.ExecContext(ctx, user.Email, user.Password, user.ID)
 	if err != nil {
-		return repo.ErrFailedToUpdateUser
+		return errors2.ErrFailedToUpdateUser
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (r *UsersRepoSqlite) UpdateUser(ctx context.Context, user *models.User) err
 func (r *UsersRepoSqlite) DeleteUser(ctx context.Context, id int64) error {
 	stmt, err := r.db.PrepareContext(ctx, "DELETE FROM users WHERE id = ?;")
 	if err != nil {
-		return repo.ErrFailedToPrepareStmt
+		return errors2.ErrFailedToPrepareStmt
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -138,7 +138,7 @@ func (r *UsersRepoSqlite) DeleteUser(ctx context.Context, id int64) error {
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
-		return repo.ErrFailedToDeleteUser
+		return errors2.ErrFailedToDeleteUser
 	}
 
 	return nil

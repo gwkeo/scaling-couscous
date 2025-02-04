@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"errors"
-	repository "github.com/gwkeo/scaling-couscous/internal/app/repo"
+	repository "github.com/gwkeo/scaling-couscous/internal/app/errors"
 	"github.com/gwkeo/scaling-couscous/internal/app/repo/models"
 )
 
