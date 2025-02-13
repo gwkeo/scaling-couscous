@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"github.com/gwkeo/scaling-couscous/internal/app/endpoints/user"
-	sqliteRepo "github.com/gwkeo/scaling-couscous/internal/app/repo/sqlite"
+	"github.com/gwkeo/scaling-couscous/internal/app/repo/sqlite"
 	"github.com/gwkeo/scaling-couscous/internal/app/services"
 	"github.com/gwkeo/scaling-couscous/internal/config"
 	"log"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -16,8 +18,9 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	ctx := context.TODO()
-	usersRepo, err := sqliteRepo.NewUsersRepo(ctx, cfg.DBPath)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+
+	usersRepo, err := sqlite.NewUsersRepo(ctx, cfg.DBPath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -25,7 +28,19 @@ func main() {
 	usersService := services.NewUsersService(usersRepo)
 
 	userHandler := user.New(ctx, usersService, cfg)
-	if err = userHandler.Start(); err != nil {
-		log.Fatal(err.Error())
+
+	go func() {
+		if err = userHandler.Start(); err != nil {
+			log.Fatal(err.Error())
+		}
+	}()
+
+	<-ctx.Done()
+
+	if err := usersRepo.CloseDBConnection(); err != nil {
+		log.Println(err.Error())
 	}
+
+	stop()
+	log.Println("shutting down...")
 }

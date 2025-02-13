@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	ctx "github.com/gorilla/context"
+	gCtx "github.com/gorilla/context"
 	"github.com/gwkeo/scaling-couscous/internal/app/repo/models"
 	"io"
 	"net/http"
@@ -14,26 +14,22 @@ type UpdateUserInterface interface {
 }
 
 type UpdateUserHandler struct {
-	context context.Context
 	service UpdateUserInterface
 }
 
-func NewUpdateUserHandler(context context.Context, userService UpdateUserInterface) *UpdateUserHandler {
-	return &UpdateUserHandler{
-		context: context,
-		service: userService,
-	}
+func NewUpdateUserHandler(userService UpdateUserInterface) *UpdateUserHandler {
+	return &UpdateUserHandler{service: userService}
 }
 
-func (u UpdateUserHandler) UpdateUser() func(w http.ResponseWriter, r *http.Request) {
+func (u UpdateUserHandler) UpdateUser(ctx context.Context) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		rawId := ctx.Get(r, "id")
+		rawId := gCtx.Get(r, "id")
 		if rawId == nil {
 			http.Error(w, "Missing id parameter", http.StatusBadRequest)
 			return
 		}
-		id := rawId.(int64)
+		id := int64(rawId.(float64))
 
 		if id == 0 {
 			http.Error(w, "id parameter should be integer", http.StatusBadRequest)
@@ -56,7 +52,7 @@ func (u UpdateUserHandler) UpdateUser() func(w http.ResponseWriter, r *http.Requ
 
 		user.ID = id
 
-		err = u.service.Update(u.context, user)
+		err = u.service.Update(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -4,22 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gwkeo/scaling-couscous/internal/app/repo/models"
 	"strings"
-)
-
-type Role int64
-
-const (
-	Admin Role = iota
-	User
 )
 
 type Claims struct {
 	id   int64
-	role Role
+	role models.Role
 }
 
-func GenerateToken(secret string, id int64, role Role) (string, error) {
+func GenerateToken(secret string, id int64, role models.Role) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   id,

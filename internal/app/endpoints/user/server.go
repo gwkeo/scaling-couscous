@@ -35,19 +35,19 @@ func New(context context.Context, service Service, config *config.Config) *Serve
 }
 
 func (s *Server) registerRoutes() {
-	createHandler := handlers.NewCreateUserHandler(s.context, s.service)
-	s.router.HandleFunc(`/register`, createHandler.CreateUser()).Methods(http.MethodPost)
-	authHandler := handlers.NewAuthHandler(s.service, s.context, *s.config)
-	s.router.HandleFunc(`/login`, authHandler.Authenticate()).Methods(http.MethodPost)
+	createHandler := handlers.NewCreateUserHandler(s.service)
+	s.router.HandleFunc(`/register`, createHandler.CreateUser(s.context)).Methods(http.MethodPost)
+	authHandler := handlers.NewAuthHandler(s.service, *s.config)
+	s.router.HandleFunc(`/login`, authHandler.Authenticate(s.context)).Methods(http.MethodPost)
 
 	subRouter := s.router.PathPrefix("/user").Subrouter()
 	subRouter.Use(auth.AuthenticationMW(s.config.Secret))
-	readHandler := handlers.NewReadUserHandler(s.context, s.service)
-	subRouter.HandleFunc(`/user`, readHandler.Read()).Methods(http.MethodGet)
-	updateHandler := handlers.NewUpdateUserHandler(s.context, s.service)
-	subRouter.HandleFunc(`/user`, updateHandler.UpdateUser()).Methods(http.MethodPut)
-	deleteHandler := handlers.NewDeleteUserHandler(s.context, s.service)
-	subRouter.HandleFunc(`/user`, deleteHandler.Delete()).Methods(http.MethodDelete)
+	readHandler := handlers.NewReadUserHandler(s.service)
+	subRouter.HandleFunc(``, readHandler.Read(s.context)).Methods(http.MethodGet)
+	updateHandler := handlers.NewUpdateUserHandler(s.service)
+	subRouter.HandleFunc(``, updateHandler.UpdateUser(s.context)).Methods(http.MethodPut)
+	deleteHandler := handlers.NewDeleteUserHandler(s.service)
+	subRouter.HandleFunc(``, deleteHandler.Delete(s.context)).Methods(http.MethodDelete)
 }
 
 func (s *Server) Start() error {

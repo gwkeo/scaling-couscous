@@ -13,19 +13,13 @@ type ReadUserInterface interface {
 	ReadByEmail(context.Context, string) (*models.User, error)
 }
 
-type ReadUserHandler struct {
-	context context.Context
-	service ReadUserInterface
+type ReadUserHandler struct{ service ReadUserInterface }
+
+func NewReadUserHandler(service ReadUserInterface) *ReadUserHandler {
+	return &ReadUserHandler{service: service}
 }
 
-func NewReadUserHandler(context context.Context, service ReadUserInterface) *ReadUserHandler {
-	return &ReadUserHandler{
-		context: context,
-		service: service,
-	}
-}
-
-func (h *ReadUserHandler) Read() func(w http.ResponseWriter, r *http.Request) {
+func (h *ReadUserHandler) Read(ctx context.Context) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		id := r.URL.Query().Get("id")
@@ -35,7 +29,7 @@ func (h *ReadUserHandler) Read() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := h.service.Read(h.context, idInt64)
+		user, err := h.service.Read(ctx, idInt64)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

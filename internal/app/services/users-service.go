@@ -3,13 +3,8 @@ package services
 import (
 	"context"
 	"errors"
-	repository "github.com/gwkeo/scaling-couscous/internal/app/errors"
+	appErrors "github.com/gwkeo/scaling-couscous/internal/app/errors"
 	"github.com/gwkeo/scaling-couscous/internal/app/repo/models"
-)
-
-var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrUserNotFound      = errors.New("user not found")
 )
 
 type Repo interface {
@@ -31,7 +26,7 @@ func NewUsersService(repo Repo) *UserService {
 func (s *UserService) Create(ctx context.Context, user *models.User) (int64, error) {
 	_, err := s.repo.UserByEmail(ctx, user.Email)
 	if err != nil {
-		if !errors.Is(err, repository.ErrUserNotFound) {
+		if !errors.Is(err, appErrors.ErrUserNotFound) {
 			return 0, err
 		}
 	}
@@ -62,9 +57,6 @@ func (s *UserService) Delete(ctx context.Context, user int64) error {
 func (s *UserService) ReadByEmail(ctx context.Context, email string) (*models.User, error) {
 	user, err := s.repo.UserByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
-			return nil, ErrUserNotFound
-		}
 		return nil, err
 	}
 	return user, nil
@@ -73,9 +65,6 @@ func (s *UserService) ReadByEmail(ctx context.Context, email string) (*models.Us
 func (s *UserService) Read(ctx context.Context, id int64) (*models.User, error) {
 	user, err := s.repo.User(ctx, id)
 	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
-			return nil, ErrUserNotFound
-		}
 		return nil, err
 	}
 	return user, nil
